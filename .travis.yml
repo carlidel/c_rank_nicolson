@@ -1,0 +1,24 @@
+language: python
+python: '3.7'
+before_install:
+- sudo apt-get update
+- sudo apt-get -y install libeigen3-dev
+- sudo apt-get -y install libthrust-dev
+- sudo ln -s /usr/include/eigen3/Eigen /usr/include/Eigen
+install:
+- pip install --upgrade pip
+- pip install -r requirements.txt
+- pip install twine wheel
+script:
+- pip install .
+- pytest
+deploy:
+  provider: pypi
+  distributions: sdist
+  skip_existing: true
+  user: carlidel
+  on:
+    tags: true
+  skip_cleanup: true
+  password:
+    secure: i4el/jdLP+U7MU5P0nSyIsohbnZ9Bd2F7yw0myvVq6AniqFvL5xEE5AckdyTnEEd3hfdTju2eIc7jl6pWXfjTy6BK7eCpCaSvHyJhIonMgfw1YsQ4e2j6Il3waYn9gRiK7jqagsUgJE4Urd+1Xh4OLLlssUaNGuP05EfGxVEz7JtM/lGEMfrMcHXk4FTMsrBAOUsBbJA9MeZ2kbc/PaVef1xRZ5TTEfLK/gsjYSXDQv97IJfUjIjFeVY1jd6c+f5bR9Yc3NZDwVT2WRqPctNDhphITXUnLq4Mou65uD9UQLrCIHyiOOc8poxif4E5TJrGn34x0ll1ftBafFBnobi5WyY94/1mGVlJGU8UIiaJeO4Q4RDqS3mdoYzAj+rjkBZk1ONM086Ow2hI881LjsT4E9IKn2cxUFvgMlrzBu//iXhV3ma9MAF0IK0D7fQzkHIICFHUUq5eUEgLX4S9EdBMBcdV2+tl7C3EwngClcbJwZyH+2YdLB2p8fuEdxbWWL8mQVwWapBdatpJKkHyI3u/cuJbAIzciJ7w6pfMwdXMgERW7bC4VeKgn9NR9u7IJ3L6WFE8rdQpLo6XQdekfDGt6LgFvY+LGKWwA5FRC3T7UG9hxEAb1IfXBfR8RCn+EXLlQgpcxgjqlqHQWVZGVfQREj6/IdJblmgnbg3NMDvUYo=
