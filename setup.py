@@ -23,7 +23,7 @@ class get_pybind_include(object):
 
 ext_modules = [
     Extension(
-        'c_rank_nicolson',
+        'c_rank_nicolson.c_rank_nicolson',
         glob.glob('src/*.cpp'),
         include_dirs=[
             'src/',
@@ -110,6 +110,7 @@ setup(
     url='https://github.com/carlidel/c_rank_nicolson',
     description='A c++ implementation of Crank-Nicolson with nice python bindings',
     long_description='',
+    packages=["c_rank_nicolson"],
     ext_modules=ext_modules,
     install_requires=['pybind11>=2.4', 'numpy'],
     setup_requires=['pybind11>=2.4', 'numpy'],
