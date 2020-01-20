@@ -5,6 +5,158 @@ import scipy.integrate as integrate
 
 from .c_rank_nicolson import crank_nicolson
 
+# Useful functions for... our situation
+
+
+def action(x, p):
+    """Returns action variable
+    
+    Parameters
+    ----------
+    x : ndarray
+        position
+    p : ndarray
+        momentum
+    
+    Returns
+    -------
+    ndarray
+        action
+    """
+    return ((p * p) + (x * x)) * 0.5
+
+
+def normed_normal_distribution(I, mean_I, sigma_I):
+    """Given an I value, returns the corresponding value for a normal distribution.
+    
+    Parameters
+    ----------
+    I : ndarray
+        sample points
+    mean_I : float
+        mean of the distribution
+    sigma_I : float
+        sigme of the distribution
+    
+    Returns
+    -------
+    ndarray
+        results of the samples
+    """
+    return ((1 / np.sqrt(2 * np.pi * sigma_I ** 2))
+            * np.exp(-(I - mean_I) ** 2 / (2 * sigma_I ** 2)))
+
+
+def normed_normal_linspace(I_min, I_max, mean_I, sigma_I, num=100):
+    """Returns a normalized linspace of a normal distribution.
+    
+    Parameters
+    ----------
+    I_min : float
+        starting point
+    I_max : float
+        stopping point
+    mean_I : float
+        mean of the distribution
+    sigma_I : float
+        sigma of the distribution
+    num : int, optional
+        number of samples, by default 100
+    
+    Returns
+    -------
+    ndarray
+        linspace distribution
+    """
+    I_list = np.linspace(I_min, I_max, num)
+    values = np.empty((num))
+    for i, I in enumerate(I_list):
+        values[i] = normed_normal_distribution(I, mean_I, sigma_I)
+    normalization = integrate.simps(values, I_list)
+    values /= normalization
+    return values
+
+
+def x_from_I_th(I, th=np.pi / 2):
+    """Returns x from action-angle variables.
+    
+    Parameters
+    ----------
+    I : float
+        action value
+    th : float, optional
+        angle value, by default np.pi/2
+    
+    Returns
+    -------
+    float
+        x value
+    """
+    return np.sqrt(2 * I) * np.sin(th)
+
+
+def D_calculator(I, epsilon, x_star, delta, exponent):
+    """Estimates D value by using definitions given for stochastic map.
+    
+    Parameters
+    ----------
+    I : float
+        sampling point
+    epsilon : float
+        noise coefficient
+    x_star : float
+        nek parameter
+    delta : float
+        nek parameter
+    exponent : float
+        nek parameter (alpha)
+    
+    Returns
+    -------
+    float
+        diffusion value
+    """
+    if I <= 0:
+        return 0.0
+    int_result = integrate.quad(
+        (lambda th:
+         epsilon ** 2
+            * (2 * I)
+            * np.cos(th) ** 2
+            * np.exp(-np.power(((x_star) / (delta + np.absolute(x_from_I_th(I, th)))), exponent)) ** 2),
+        0,
+        np.pi / 2)
+    # Check if int_result is valid, otherwise return 0.0
+    return (int_result[0] / (np.pi / 2)
+            if np.absolute(int_result[0]) > int_result[1] else 0.0)
+
+
+def I_norm_sampling_to_x(mean_I, sigma_I):
+    """Extracts a random action value from a normal distribution and returns a corrispective x value (assumes p=0).
+    
+    Parameters
+    ----------
+    mean_I : float
+        mean of the distribution
+    sigma_I : float
+        sigma of the distribution
+    
+    Returns
+    -------
+    float
+        extracted x
+    """
+    counter = 0
+    while True:
+        extracted_I = np.random.normal(mean_I, sigma_I)
+        if extracted_I >= 0:
+            break
+        counter += 1
+        assert counter < 100
+    return x_from_I_th(extracted_I)
+
+
+# The actual class to be used
 
 class cn_generic(object):
     """wrapper for generic diffusive process"""
@@ -34,9 +186,9 @@ class cn_generic(object):
         self.dt = dt
         self.D_lambda = D_lambda
 
-        self.I = np.linspace(I_min, I_max, I0.size())
-        self.samples = I0.size()
-        self.dt = self.I[1] - self.I[0]
+        self.I = np.linspace(I_min, I_max, I0.size)
+        self.samples = I0.size
+        self.dI = self.I[1] - self.I[0]
         self.half_dI = self.dI * 0.5
 
         A = []
@@ -53,7 +205,7 @@ class cn_generic(object):
         self.locked_right = False
 
         # For Reference:
-        self.diffusion = self.D_lambda(self.I)
+        self.diffusion = np.array(self.D_lambda(i) for i in self.I)
 
         # Normalize?
         if normalize:
