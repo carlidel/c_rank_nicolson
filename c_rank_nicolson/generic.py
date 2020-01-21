@@ -205,7 +205,7 @@ class cn_generic(object):
         self.locked_right = False
 
         # For Reference:
-        self.diffusion = np.array(self.D_lambda(i) for i in self.I)
+        self.diffusion = np.array([self.D_lambda(i) for i in self.I])
 
         # Normalize?
         if normalize:
