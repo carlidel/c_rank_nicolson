@@ -95,6 +95,24 @@ def x_from_I_th(I, th=np.pi / 2):
     return np.sqrt(2 * I) * np.sin(th)
 
 
+def p_from_I_th(I, th=0.0):
+    """Returns p from action-angle variables.
+    
+    Parameters
+    ----------
+    I : float
+        action value
+    th : float, optional
+        angle value, by default 0.0
+    
+    Returns
+    -------
+    float
+        p value
+    """    
+    return np.sqrt(2 * I) * np.cos(th)
+
+
 def D_calculator(I, epsilon, x_star, delta, exponent):
     """Estimates D value by using definitions given for stochastic map.
     
@@ -127,8 +145,9 @@ def D_calculator(I, epsilon, x_star, delta, exponent):
         0,
         np.pi / 2)
     # Check if int_result is valid, otherwise return 0.0
+    #print(int_result[0], int_result[1],(int_result[1] / int_result[0] if int_result[0] != 0.0 else 0.0))
     return (int_result[0] / (np.pi / 2)
-            if np.absolute(int_result[0]) > int_result[1] else 0.0)
+            if np.absolute(int_result[1] / int_result[0] if int_result[0] != 0.0 else 1.0) < 0.05 else 0.0)
 
 
 def I_norm_sampling_to_x(mean_I, sigma_I):
